@@ -46,16 +46,6 @@ See also [`FunctionImplementations.DefaultArrayStyle`](@ref).
 abstract type AbstractArrayStyle{N} <: Style end
 
 """
-`FunctionImplementations.ArrayStyle{MyArrayType}()` is a [`FunctionImplementations.Style`](@ref) indicating that an object
-behaves as an array. It presents a simple way to construct
-[`FunctionImplementations.AbstractArrayStyle`](@ref)s for specific `AbstractArray` container types.
-Styles created this way lose track of dimensionality; if keeping track is important
-for your type, you should create your own custom [`FunctionImplementations.AbstractArrayStyle`](@ref).
-"""
-struct ArrayStyle{A <: AbstractArray} <: AbstractArrayStyle{Any} end
-ArrayStyle{A}(::Val) where {A} = ArrayStyle{A}()
-
-"""
 `FunctionImplementations.DefaultArrayStyle{N}()` is a [`FunctionImplementations.Style`](@ref) indicating that an object
 behaves as an `N`-dimensional array. Specifically, `DefaultArrayStyle` is
 used for any
@@ -64,6 +54,7 @@ overrides from other arguments the resulting output type is `Array`.
 When there are multiple inputs, `DefaultArrayStyle` "loses" to any other [`FunctionImplementations.ArrayStyle`](@ref).
 """
 struct DefaultArrayStyle{N} <: AbstractArrayStyle{N} end
+DefaultArrayStyle() = DefaultArrayStyle{Any}()
 DefaultArrayStyle(::Val{N}) where {N} = DefaultArrayStyle{N}()
 DefaultArrayStyle{M}(::Val{N}) where {N, M} = DefaultArrayStyle{N}()
 const DefaultVectorStyle = DefaultArrayStyle{1}
@@ -98,8 +89,6 @@ Style(::Style, ::Style) = UnknownStyle()
 Style(::UnknownStyle, ::UnknownStyle) = UnknownStyle()
 Style(::S, ::UnknownStyle) where {S <: Style} = S()
 # Precedence rules
-Style(::A, ::A) where {A <: ArrayStyle} = A()
-Style(::ArrayStyle, ::ArrayStyle) = UnknownStyle()
 Style(::A, ::A) where {A <: AbstractArrayStyle} = A()
 function Style(a::A, b::B) where {A <: AbstractArrayStyle{M}, B <: AbstractArrayStyle{N}} where {M, N}
     if Base.typename(A) === Base.typename(B)

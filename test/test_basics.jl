@@ -49,25 +49,6 @@ using Test: @test, @testset
             FI.DefaultArrayStyle{2}()
         ) isa FI.DefaultArrayStyle{2}
 
-        # Test ArrayStyle
-        arr_style = FI.ArrayStyle{Vector{Int}}()
-        @test arr_style isa FI.ArrayStyle{Vector{Int}}
-        @test arr_style isa FI.AbstractArrayStyle{Any}
-
-        # Test that same ArrayStyle returns preserved
-        arr_style1 = FI.ArrayStyle{Vector{Int}}()
-        arr_style2 = FI.ArrayStyle{Vector{Int}}()
-        @test FI.Style(arr_style1, arr_style2) ≡ arr_style1
-
-        # Test different ArrayStyles result in UnknownStyle
-        arr_style_vec = FI.ArrayStyle{Vector{Int}}()
-        arr_style_mat = FI.ArrayStyle{Matrix{Int}}()
-        @test FI.Style(arr_style_vec, arr_style_mat) isa FI.UnknownStyle
-
-        # Test ArrayStyle Val constructor
-        arr_style_val = FI.ArrayStyle{Vector{Int}}(Val(2))
-        @test arr_style_val isa FI.ArrayStyle{Vector{Int}}
-
         # Test DefaultArrayStyle Val constructor preserves type when dimension matches
         default_style = FI.DefaultArrayStyle{1}(Val(1))
         @test default_style isa FI.DefaultArrayStyle{1}
