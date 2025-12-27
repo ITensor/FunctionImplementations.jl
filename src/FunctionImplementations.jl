@@ -1,5 +1,6 @@
 module FunctionImplementations
 
-# Write your package code here.
+include("implementation.jl")
+include("style.jl")
 
 end
