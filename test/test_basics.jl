@@ -47,15 +47,17 @@ using Test: @test, @testset
         @test FI.Style(
             FI.DefaultArrayStyle{1}(),
             FI.DefaultArrayStyle{2}()
-        ) isa FI.DefaultArrayStyle{2}
+        ) isa FI.DefaultArrayStyle{Any}
 
         # Test DefaultArrayStyle Val constructor preserves type when dimension matches
         default_style = FI.DefaultArrayStyle{1}(Val(1))
-        @test default_style isa FI.DefaultArrayStyle{1}
+        @test FI.DefaultArrayStyle{1}(Val(1)) isa FI.DefaultArrayStyle{1}
 
         # Test DefaultArrayStyle Val constructor changes dimension
-        default_style_change = FI.DefaultArrayStyle{1}(Val(2))
-        @test default_style_change isa FI.DefaultArrayStyle{2}
+        @test FI.DefaultArrayStyle{1}(Val(2)) isa FI.DefaultArrayStyle{2}
+
+        # Test DefaultArrayStyle constructor defaults to Any dimension
+        @test FI.DefaultArrayStyle() isa FI.DefaultArrayStyle{Any}
 
         # Test const aliases
         @test FI.DefaultVectorStyle ≡ FI.DefaultArrayStyle{1}
@@ -79,7 +81,7 @@ using Test: @test, @testset
 
         # Test combine_styles with two arguments
         result = FI.combine_styles([1, 2], [1 2; 3 4])
-        @test result isa FI.DefaultArrayStyle{2}
+        @test result isa FI.DefaultArrayStyle{Any}
 
         # Test combine_styles with same dimensions
         result = FI.combine_styles([1], [2])
@@ -87,7 +89,7 @@ using Test: @test, @testset
 
         # Test combine_styles with multiple arguments
         result = FI.combine_styles([1], [1 2], rand(2, 3, 4))
-        @test result isa FI.DefaultArrayStyle{3}
+        @test result isa FI.DefaultArrayStyle{Any}
 
         # Test result_style with single argument
         @test FI.result_style(FI.DefaultArrayStyle{1}()) isa FI.DefaultArrayStyle{1}
@@ -107,7 +109,7 @@ using Test: @test, @testset
             FI.DefaultArrayStyle{1}(),
             FI.DefaultArrayStyle{2}()
         )
-        @test result isa FI.DefaultArrayStyle{2}
+        @test result isa FI.DefaultArrayStyle{Any}
 
         # Test result_style with same shape behaves consistently
         same_style = FI.DefaultArrayStyle{2}()

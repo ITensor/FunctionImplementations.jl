@@ -92,7 +92,7 @@ Style(::S, ::UnknownStyle) where {S <: Style} = S()
 Style(::A, ::A) where {A <: AbstractArrayStyle} = A()
 function Style(a::A, b::B) where {A <: AbstractArrayStyle{M}, B <: AbstractArrayStyle{N}} where {M, N}
     if Base.typename(A) === Base.typename(B)
-        return A(Val(max(M, N)))
+        return A(Val(Any))
     end
     return UnknownStyle()
 end
@@ -100,7 +100,7 @@ end
 Style(a::AbstractArrayStyle{Any}, ::DefaultArrayStyle) = a
 Style(a::AbstractArrayStyle{N}, ::DefaultArrayStyle{N}) where {N} = a
 Style(a::AbstractArrayStyle{M}, ::DefaultArrayStyle{N}) where {M, N} =
-    typeof(a)(Val(max(M, N)))
+    typeof(a)(Val(Any))
 
 ## logic for deciding the Style
 
