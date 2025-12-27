@@ -12,9 +12,16 @@ using Test: @test, @testset
         @test f.f ≡ +
         @test f.style ≡ MyAddAlgorithm()
     end
+    @testset "(s::Style)(f)" begin
+        # Test the shorthand for creating an Implementation by calling a Style with a
+        # function.
+        @test FI.Style([1, 2, 3])(getindex) ≡
+            FI.Implementation(getindex, FI.DefaultArrayStyle{1}())
+    end
     @testset "Style" begin
         # Test basic Style trait for different array types
         @test FI.Style(typeof([1, 2, 3])) isa FI.DefaultArrayStyle{1}
+        @test FI.Style([1, 2, 3]) isa FI.DefaultArrayStyle{1}
         @test FI.Style(typeof([1 2; 3 4])) isa FI.DefaultArrayStyle{2}
         @test FI.Style(typeof(rand(2, 3, 4))) isa FI.DefaultArrayStyle{3}
 

@@ -13,9 +13,20 @@ by defining a type/method pair
     
 """
 abstract type Style end
+Style(x) = Style(typeof(x))
+Style(::Type{T}) where {T} = throw(MethodError(Style, (T,)))
 
 struct UnknownStyle <: Style end
 Style(::Type{Union{}}, slurp...) = UnknownStyle()  # ambiguity resolution
+
+"""
+    (s::Style)(f)
+
+Calling a Style `s` with a function `f` as `s(f)` is a shorthand for creating a
+[`FunctionImplementations.Implementation`](@ref) object wrapping the function `f` with
+Style `s`.
+"""
+(s::Style)(f) = Implementation(f, s)
 
 """
 `FunctionImplementations.AbstractArrayStyle{N} <: Style` is the abstract supertype for any style
@@ -32,7 +43,7 @@ For `AbstractArray` types that support arbitrary dimensionality, `N` can be set 
     FunctionImplementations.Style(::Type{<:MyArray}) = MyArrayStyle()
 
 In cases where you want to be able to mix multiple `AbstractArrayStyle`s and keep track
-of dimensionality, your style needs to support a [`Val`](@ref) constructor:
+of dimensionality, your style needs to support a `Val` constructor:
 
     struct MyArrayStyleDim{N} <: FunctionImplementations.AbstractArrayStyle{N} end
     (::Type{<:MyArrayStyleDim})(::Val{N}) where N = MyArrayStyleDim{N}()
@@ -51,7 +62,6 @@ behaves as an `N`-dimensional array. Specifically, `DefaultArrayStyle` is
 used for any
 `AbstractArray` type that hasn't defined a specialized style, and in the absence of
 overrides from other arguments the resulting output type is `Array`.
-When there are multiple inputs, `DefaultArrayStyle` "loses" to any other [`FunctionImplementations.ArrayStyle`](@ref).
 """
 struct DefaultArrayStyle{N} <: AbstractArrayStyle{N} end
 DefaultArrayStyle() = DefaultArrayStyle{Any}()
@@ -60,7 +70,6 @@ DefaultArrayStyle{M}(::Val{N}) where {N, M} = DefaultArrayStyle{N}()
 const DefaultVectorStyle = DefaultArrayStyle{1}
 const DefaultMatrixStyle = DefaultArrayStyle{2}
 Style(::Type{<:AbstractArray{T, N}}) where {T, N} = DefaultArrayStyle{N}()
-Style(::Type{T}) where {T} = DefaultArrayStyle{ndims(T)}()
 
 # `ArrayConflict` is an internal type signaling that two or more different `AbstractArrayStyle`
 # objects were supplied as arguments, and that no rule was defined for resolving the
@@ -114,7 +123,7 @@ Uses [`Style`](@ref) to get the style for each argument, and uses
 # Examples
 ```jldoctest
 julia> FunctionImplementations.combine_styles([1], [1 2; 3 4])
-FunctionImplementations.DefaultArrayStyle{2}()
+FunctionImplementations.DefaultArrayStyle{Any}()
 ```
 """
 function combine_styles end
@@ -134,7 +143,7 @@ determine a common `Style`.
 
 ```jldoctest
 julia> FunctionImplementations.result_style(FunctionImplementations.DefaultArrayStyle{0}(), FunctionImplementations.DefaultArrayStyle{3}())
-FunctionImplementations.DefaultArrayStyle{3}()
+FunctionImplementations.DefaultArrayStyle{Any}()
 
 julia> FunctionImplementations.result_style(FunctionImplementations.UnknownStyle(), FunctionImplementations.DefaultArrayStyle{1}())
 FunctionImplementations.DefaultArrayStyle{1}()
