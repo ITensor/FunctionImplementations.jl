@@ -1,0 +1,8 @@
+[deps]
+FunctionImplementations = "7c7cc465-9c6a-495f-bdd1-f42428e86d0c"
+
+[sources]
+FunctionImplementations = {path = ".."}
+
+[compat]
+FunctionImplementations = "0.1"
