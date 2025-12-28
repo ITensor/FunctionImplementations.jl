@@ -13,7 +13,6 @@ by defining a type/method pair
     
 """
 abstract type Style end
-Style(x) = Style(typeof(x))
 Style(::Type{T}) where {T} = throw(MethodError(Style, (T,)))
 
 struct UnknownStyle <: Style end
@@ -114,7 +113,7 @@ Style(a::AbstractArrayStyle{M}, ::DefaultArrayStyle{N}) where {M, N} =
 ## logic for deciding the Style
 
 """
-    combine_styles(cs...)::Style
+    style(cs...)::Style
 
 Decides which `Style` to use for any number of value arguments.
 Uses [`Style`](@ref) to get the style for each argument, and uses
@@ -122,16 +121,16 @@ Uses [`Style`](@ref) to get the style for each argument, and uses
 
 # Examples
 ```jldoctest
-julia> FunctionImplementations.combine_styles([1], [1 2; 3 4])
+julia> FunctionImplementations.style([1], [1 2; 3 4])
 FunctionImplementations.DefaultArrayStyle{Any}()
 ```
 """
-function combine_styles end
+function style end
 
-combine_styles() = DefaultArrayStyle{0}()
-combine_styles(c) = result_style(Style(typeof(c)))
-combine_styles(c1, c2) = result_style(combine_styles(c1), combine_styles(c2))
-@inline combine_styles(c1, c2, cs...) = result_style(combine_styles(c1), combine_styles(c2, cs...))
+style() = DefaultArrayStyle{0}()
+style(c) = result_style(Style(typeof(c)))
+style(c1, c2) = result_style(style(c1), style(c2))
+@inline style(c1, c2, cs...) = result_style(style(c1), style(c2, cs...))
 
 """
     result_style(s1::Style[, s2::Style])::Style
