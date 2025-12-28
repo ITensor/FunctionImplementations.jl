@@ -15,13 +15,13 @@ using Test: @test, @testset
     @testset "(s::Style)(f)" begin
         # Test the shorthand for creating an Implementation by calling a Style with a
         # function.
-        @test FI.Style([1, 2, 3])(getindex) ≡
+        @test FI.style([1, 2, 3])(getindex) ≡
             FI.Implementation(getindex, FI.DefaultArrayStyle{1}())
     end
     @testset "Style" begin
         # Test basic Style trait for different array types
         @test FI.Style(typeof([1, 2, 3])) isa FI.DefaultArrayStyle{1}
-        @test FI.Style([1, 2, 3]) isa FI.DefaultArrayStyle{1}
+        @test FI.style([1, 2, 3]) isa FI.DefaultArrayStyle{1}
         @test FI.Style(typeof([1 2; 3 4])) isa FI.DefaultArrayStyle{2}
         @test FI.Style(typeof(rand(2, 3, 4))) isa FI.DefaultArrayStyle{3}
 
@@ -79,23 +79,23 @@ using Test: @test, @testset
         conflict_val = FI.ArrayConflict(Val(3))
         @test conflict_val isa FI.ArrayConflict
 
-        # Test combine_styles with no arguments
-        @test FI.combine_styles() isa FI.DefaultArrayStyle{0}
+        # Test style with no arguments
+        @test FI.style() isa FI.DefaultArrayStyle{0}
 
-        # Test combine_styles with single argument
-        @test FI.combine_styles([1, 2]) isa FI.DefaultArrayStyle{1}
-        @test FI.combine_styles([1 2; 3 4]) isa FI.DefaultArrayStyle{2}
+        # Test style with single argument
+        @test FI.style([1, 2]) isa FI.DefaultArrayStyle{1}
+        @test FI.style([1 2; 3 4]) isa FI.DefaultArrayStyle{2}
 
-        # Test combine_styles with two arguments
-        result = FI.combine_styles([1, 2], [1 2; 3 4])
+        # Test style with two arguments
+        result = FI.style([1, 2], [1 2; 3 4])
         @test result isa FI.DefaultArrayStyle{Any}
 
-        # Test combine_styles with same dimensions
-        result = FI.combine_styles([1], [2])
+        # Test style with same dimensions
+        result = FI.style([1], [2])
         @test result isa FI.DefaultArrayStyle{1}
 
-        # Test combine_styles with multiple arguments
-        result = FI.combine_styles([1], [1 2], rand(2, 3, 4))
+        # Test style with multiple arguments
+        result = FI.style([1], [1 2], rand(2, 3, 4))
         @test result isa FI.DefaultArrayStyle{Any}
 
         # Test result_style with single argument

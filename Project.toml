@@ -1,7 +1,7 @@
 name = "FunctionImplementations"
 uuid = "7c7cc465-9c6a-495f-bdd1-f42428e86d0c"
 authors = ["ITensor developers <support@itensor.org> and contributors"]
-version = "0.1.0"
+version = "0.2.0"
 
 [compat]
 julia = "1.10"
