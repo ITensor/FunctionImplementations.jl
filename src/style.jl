@@ -54,6 +54,8 @@ define binary [`Style`](@ref) rules to control the output type.
 See also [`FunctionImplementations.DefaultArrayStyle`](@ref).
 """
 abstract type AbstractArrayStyle{N} <: Style end
+abstract type AbstractVectorStyle <: AbstractArrayStyle{1} end
+abstract type AbstractMatrixStyle <: AbstractArrayStyle{2} end
 
 """
 `FunctionImplementations.DefaultArrayStyle{N}()` is a [`FunctionImplementations.Style`](@ref) indicating that an object
