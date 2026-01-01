@@ -9,4 +9,4 @@ FunctionImplementations = {path = ".."}
 [compat]
 Documenter = "1"
 Literate = "2"
-FunctionImplementations = "0.2"
+FunctionImplementations = "0.3"

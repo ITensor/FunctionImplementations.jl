@@ -28,24 +28,8 @@ Style `s`.
 (s::Style)(f) = Implementation(f, s)
 
 """
-`FunctionImplementations.AbstractArrayStyle{N} <: Style` is the abstract supertype for any style
+`FunctionImplementations.AbstractArrayStyle <: Style` is the abstract supertype for any style
 associated with an `AbstractArray` type.
-The `N` parameter is the dimensionality, which can be handy for AbstractArray types
-that only support specific dimensionalities:
-
-    struct SparseMatrixStyle <: FunctionImplementations.AbstractArrayStyle{2} end
-    FunctionImplementations.Style(::Type{<:SparseMatrixCSC}) = SparseMatrixStyle()
-
-For `AbstractArray` types that support arbitrary dimensionality, `N` can be set to `Any`:
-
-    struct MyArrayStyle <: FunctionImplementations.AbstractArrayStyle{Any} end
-    FunctionImplementations.Style(::Type{<:MyArray}) = MyArrayStyle()
-
-In cases where you want to be able to mix multiple `AbstractArrayStyle`s and keep track
-of dimensionality, your style needs to support a `Val` constructor:
-
-    struct MyArrayStyleDim{N} <: FunctionImplementations.AbstractArrayStyle{N} end
-    (::Type{<:MyArrayStyleDim})(::Val{N}) where N = MyArrayStyleDim{N}()
 
 Note that if two or more `AbstractArrayStyle` subtypes conflict, the resulting
 style will fall back to that of `Array`s. If this is undesirable, you may need to
@@ -53,32 +37,23 @@ define binary [`Style`](@ref) rules to control the output type.
 
 See also [`FunctionImplementations.DefaultArrayStyle`](@ref).
 """
-abstract type AbstractArrayStyle{N} <: Style end
-abstract type AbstractVectorStyle <: AbstractArrayStyle{1} end
-abstract type AbstractMatrixStyle <: AbstractArrayStyle{2} end
+abstract type AbstractArrayStyle <: Style end
 
 """
-`FunctionImplementations.DefaultArrayStyle{N}()` is a [`FunctionImplementations.Style`](@ref) indicating that an object
-behaves as an `N`-dimensional array. Specifically, `DefaultArrayStyle` is
-used for any
-`AbstractArray` type that hasn't defined a specialized style, and in the absence of
-overrides from other arguments the resulting output type is `Array`.
+`FunctionImplementations.DefaultArrayStyle()` is a [`FunctionImplementations.Style`](@ref)
+indicating that an object behaves as an array. Specifically, `DefaultArrayStyle` is
+used for any `AbstractArray` type that hasn't defined a specialized style, and in the
+absence of overrides from other arguments the resulting output type is `Array`.
 """
-struct DefaultArrayStyle{N} <: AbstractArrayStyle{N} end
-DefaultArrayStyle() = DefaultArrayStyle{Any}()
-DefaultArrayStyle(::Val{N}) where {N} = DefaultArrayStyle{N}()
-DefaultArrayStyle{M}(::Val{N}) where {N, M} = DefaultArrayStyle{N}()
-const DefaultVectorStyle = DefaultArrayStyle{1}
-const DefaultMatrixStyle = DefaultArrayStyle{2}
-Style(::Type{<:AbstractArray{T, N}}) where {T, N} = DefaultArrayStyle{N}()
+struct DefaultArrayStyle <: AbstractArrayStyle end
+Style(::Type{<:AbstractArray}) = DefaultArrayStyle()
 
 # `ArrayConflict` is an internal type signaling that two or more different `AbstractArrayStyle`
 # objects were supplied as arguments, and that no rule was defined for resolving the
 # conflict. The resulting output is `Array`. While this is the same output type
 # produced by `DefaultArrayStyle`, `ArrayConflict` "poisons" the Style so that
 # 3 or more arguments still return an `ArrayConflict`.
-struct ArrayConflict <: AbstractArrayStyle{Any} end
-ArrayConflict(::Val) = ArrayConflict()
+struct ArrayConflict <: AbstractArrayStyle end
 
 ### Binary Style rules
 """
@@ -100,17 +75,14 @@ Style(::UnknownStyle, ::UnknownStyle) = UnknownStyle()
 Style(::S, ::UnknownStyle) where {S <: Style} = S()
 # Precedence rules
 Style(::A, ::A) where {A <: AbstractArrayStyle} = A()
-function Style(a::A, b::B) where {A <: AbstractArrayStyle{M}, B <: AbstractArrayStyle{N}} where {M, N}
-    if Base.typename(A) === Base.typename(B)
-        return A(Val(Any))
+function Style(a::A, b::B) where {A <: AbstractArrayStyle, B <: AbstractArrayStyle}
+    if Base.typename(A) ≡ Base.typename(B)
+        return A()
     end
     return UnknownStyle()
 end
 # Any specific array type beats DefaultArrayStyle
-Style(a::AbstractArrayStyle{Any}, ::DefaultArrayStyle) = a
-Style(a::AbstractArrayStyle{N}, ::DefaultArrayStyle{N}) where {N} = a
-Style(a::AbstractArrayStyle{M}, ::DefaultArrayStyle{N}) where {M, N} =
-    typeof(a)(Val(Any))
+Style(a::AbstractArrayStyle, ::DefaultArrayStyle) = a
 
 ## logic for deciding the Style
 
@@ -129,7 +101,7 @@ FunctionImplementations.DefaultArrayStyle{Any}()
 """
 function style end
 
-style() = DefaultArrayStyle{0}()
+style() = DefaultArrayStyle()
 style(c) = result_style(Style(typeof(c)))
 style(c1, c2) = result_style(style(c1), style(c2))
 @inline style(c1, c2, cs...) = result_style(style(c1), style(c2, cs...))
@@ -143,11 +115,11 @@ determine a common `Style`.
 # Examples
 
 ```jldoctest
-julia> FunctionImplementations.result_style(FunctionImplementations.DefaultArrayStyle{0}(), FunctionImplementations.DefaultArrayStyle{3}())
-FunctionImplementations.DefaultArrayStyle{Any}()
+julia> FunctionImplementations.result_style(FunctionImplementations.DefaultArrayStyle(), FunctionImplementations.DefaultArrayStyle())
+FunctionImplementations.DefaultArrayStyle()
 
-julia> FunctionImplementations.result_style(FunctionImplementations.UnknownStyle(), FunctionImplementations.DefaultArrayStyle{1}())
-FunctionImplementations.DefaultArrayStyle{1}()
+julia> FunctionImplementations.result_style(FunctionImplementations.UnknownStyle(), FunctionImplementations.DefaultArrayStyle())
+FunctionImplementations.DefaultArrayStyle()
 ```
 """
 function result_style end

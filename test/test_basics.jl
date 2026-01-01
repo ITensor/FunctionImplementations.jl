@@ -16,14 +16,14 @@ using Test: @test, @testset
         # Test the shorthand for creating an Implementation by calling a Style with a
         # function.
         @test FI.style([1, 2, 3])(getindex) ≡
-            FI.Implementation(getindex, FI.DefaultArrayStyle{1}())
+            FI.Implementation(getindex, FI.DefaultArrayStyle())
     end
     @testset "Style" begin
         # Test basic Style trait for different array types
-        @test FI.Style(typeof([1, 2, 3])) isa FI.DefaultArrayStyle{1}
-        @test FI.style([1, 2, 3]) isa FI.DefaultArrayStyle{1}
-        @test FI.Style(typeof([1 2; 3 4])) isa FI.DefaultArrayStyle{2}
-        @test FI.Style(typeof(rand(2, 3, 4))) isa FI.DefaultArrayStyle{3}
+        @test FI.Style(typeof([1, 2, 3])) ≡ FI.DefaultArrayStyle()
+        @test FI.style([1, 2, 3]) ≡ FI.DefaultArrayStyle()
+        @test FI.Style(typeof([1 2; 3 4])) ≡ FI.DefaultArrayStyle()
+        @test FI.Style(typeof(rand(2, 3, 4))) ≡ FI.DefaultArrayStyle()
 
         # Test custom Style definition
         struct CustomStyle <: FI.Style end
@@ -35,91 +35,56 @@ using Test: @test, @testset
         struct MyArray{T, N} <: AbstractArray{T, N}
             data::Array{T, N}
         end
-        struct MyArrayStyle <: FI.AbstractArrayStyle{Any} end
+        struct MyArrayStyle <: FI.AbstractArrayStyle end
         FI.Style(::Type{<:MyArray}) = MyArrayStyle()
         @test FI.Style(MyArray) isa MyArrayStyle
 
         # Test style homogeneity rule (same type returns preserved)
-        s1 = FI.DefaultArrayStyle{1}()
-        s2 = FI.DefaultArrayStyle{1}()
-        @test FI.Style(s1, s2) ≡ s1
+        s1 = FI.DefaultArrayStyle()
+        s2 = FI.DefaultArrayStyle()
+        @test FI.Style(s1, s2) ≡ FI.DefaultArrayStyle()
 
         # Test UnknownStyle precedence
         unknown = FI.UnknownStyle()
-        known = FI.DefaultArrayStyle{1}()
+        known = FI.DefaultArrayStyle()
         @test FI.Style(known, unknown) ≡ known
         @test FI.Style(unknown, unknown) ≡ unknown
-
-        # Test AbstractArrayStyle with different dimensions uses max
-        @test FI.Style(
-            FI.DefaultArrayStyle{1}(),
-            FI.DefaultArrayStyle{2}()
-        ) isa FI.DefaultArrayStyle{Any}
-
-        # Test DefaultArrayStyle Val constructor preserves type when dimension matches
-        default_style = FI.DefaultArrayStyle{1}(Val(1))
-        @test FI.DefaultArrayStyle{1}(Val(1)) isa FI.DefaultArrayStyle{1}
-
-        # Test DefaultArrayStyle Val constructor changes dimension
-        @test FI.DefaultArrayStyle{1}(Val(2)) isa FI.DefaultArrayStyle{2}
-
-        # Test DefaultArrayStyle constructor defaults to Any dimension
-        @test FI.DefaultArrayStyle() isa FI.DefaultArrayStyle{Any}
-
-        # Test const aliases
-        @test FI.DefaultVectorStyle ≡ FI.DefaultArrayStyle{1}
-        @test FI.DefaultMatrixStyle ≡ FI.DefaultArrayStyle{2}
 
         # Test ArrayConflict
         conflict = FI.ArrayConflict()
         @test conflict isa FI.ArrayConflict
-        @test conflict isa FI.AbstractArrayStyle{Any}
-
-        # Test ArrayConflict Val constructor
-        conflict_val = FI.ArrayConflict(Val(3))
-        @test conflict_val isa FI.ArrayConflict
+        @test conflict isa FI.AbstractArrayStyle
 
         # Test style with no arguments
-        @test FI.style() isa FI.DefaultArrayStyle{0}
+        @test FI.style() ≡ FI.DefaultArrayStyle()
 
         # Test style with single argument
-        @test FI.style([1, 2]) isa FI.DefaultArrayStyle{1}
-        @test FI.style([1 2; 3 4]) isa FI.DefaultArrayStyle{2}
+        @test FI.style([1, 2]) ≡ FI.DefaultArrayStyle()
+        @test FI.style([1 2; 3 4]) ≡ FI.DefaultArrayStyle()
 
         # Test style with two arguments
         result = FI.style([1, 2], [1 2; 3 4])
-        @test result isa FI.DefaultArrayStyle{Any}
+        @test result ≡ FI.DefaultArrayStyle()
 
         # Test style with same dimensions
         result = FI.style([1], [2])
-        @test result isa FI.DefaultArrayStyle{1}
+        @test result ≡ FI.DefaultArrayStyle()
 
         # Test style with multiple arguments
         result = FI.style([1], [1 2], rand(2, 3, 4))
-        @test result isa FI.DefaultArrayStyle{Any}
+        @test result ≡ FI.DefaultArrayStyle()
 
         # Test result_style with single argument
-        @test FI.result_style(FI.DefaultArrayStyle{1}()) isa FI.DefaultArrayStyle{1}
+        @test FI.result_style(FI.DefaultArrayStyle()) isa FI.DefaultArrayStyle
 
         # Test result_style with two identical styles
-        s = FI.DefaultArrayStyle{2}()
+        s = FI.DefaultArrayStyle()
         @test FI.result_style(s, s) ≡ s
 
         # Test result_style with UnknownStyle
-        known = FI.DefaultArrayStyle{1}()
+        known = FI.DefaultArrayStyle()
         unknown = FI.UnknownStyle()
         @test FI.result_style(known, unknown) ≡ known
         @test FI.result_style(unknown, known) ≡ known
-
-        # Test result_style with different dimension DefaultArrayStyle uses max
-        result = FI.result_style(
-            FI.DefaultArrayStyle{1}(),
-            FI.DefaultArrayStyle{2}()
-        )
-        @test result isa FI.DefaultArrayStyle{Any}
-
-        # Test result_style with same shape behaves consistently
-        same_style = FI.DefaultArrayStyle{2}()
-        @test FI.result_style(same_style, same_style) ≡ same_style
     end
 end

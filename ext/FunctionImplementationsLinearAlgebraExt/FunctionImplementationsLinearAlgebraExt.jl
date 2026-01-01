@@ -3,7 +3,7 @@ module FunctionImplementationsLinearAlgebraExt
 import FunctionImplementations as FI
 import LinearAlgebra as LA
 
-struct DiagonalStyle <: FI.AbstractMatrixStyle end
+struct DiagonalStyle <: FI.AbstractArrayStyle end
 FI.Style(::Type{<:LA.Diagonal}) = DiagonalStyle()
 const permuteddims_diag = DiagonalStyle()(FI.permuteddims)
 function permuteddims_diag(a::AbstractArray, perm)
