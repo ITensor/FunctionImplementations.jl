@@ -96,7 +96,7 @@ Uses [`Style`](@ref) to get the style for each argument, and uses
 # Examples
 ```jldoctest
 julia> FunctionImplementations.style([1], [1 2; 3 4])
-FunctionImplementations.DefaultArrayStyle{Any}()
+FunctionImplementations.DefaultArrayStyle()
 ```
 """
 function style end
