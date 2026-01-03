@@ -11,7 +11,7 @@ FunctionImplementations = {path = ".."}
 
 [compat]
 Aqua = "0.8"
-FunctionImplementations = "0.2"
+FunctionImplementations = "0.3"
 LinearAlgebra = "1.10"
 SafeTestsets = "0.1"
 Suppressor = "0.2"
