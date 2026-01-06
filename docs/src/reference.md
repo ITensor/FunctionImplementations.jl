@@ -1,5 +1,5 @@
 # Reference
 
 ```@autodocs
-Modules = [FunctionImplementations]
+Modules = [FunctionImplementations, FunctionImplementations.Concatenate]
 ```

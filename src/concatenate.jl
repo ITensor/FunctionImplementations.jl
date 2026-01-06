@@ -1,7 +1,7 @@
 """
     module Concatenate
 
-Alternative implementation for `Base.cat` through [`cat(!)`](@ref cat).
+Alternative implementation for `Base.cat` through `Concatenate.cat(!)`.
 
 This is mostly a copy of the Base implementation, with the main difference being
 that the destination is chosen based on all inputs instead of just the first.
@@ -11,15 +11,19 @@ reminiscent of how Broadcast works.
 
 The various entry points for specializing behavior are:
 
-* Destination selection can be achieved through
+* Destination selection can be achieved through:
 
-    Base.similar(concat::Concatenated{Style}, ::Type{T}, axes) where {Style}
+```julia
+Base.similar(concat::Concatenated{Style}, ::Type{T}, axes) where {Style}
+```
 
 * Custom implementations:
 
-    Base.copy(concat::Concatenated{Style}) # custom implementation of cat
-    Base.copyto!(dest, concat::Concatenated{Style}) # custom implementation of cat! based on style
-    Base.copyto!(dest, concat::Concatenated{Nothing}) # custom implementation of cat! based on typeof(dest)
+```julia
+Base.copy(concat::Concatenated{Style}) # custom implementation of cat
+Base.copyto!(dest, concat::Concatenated{Style}) # custom implementation of cat! based on style
+Base.copyto!(dest, concat::Concatenated{Nothing}) # custom implementation of cat! based on typeof(dest)
+```
 """
 module Concatenate
 
@@ -136,7 +140,7 @@ Base.ndims(concat::Concatenated) = cat_ndims(dims(concat), concat.args...)
 
 Concatenate the supplied `args` along dimensions `dims`.
 
-See also [`cat`] and [`cat!`](@ref).
+See also [`cat`](@ref) and [`cat!`](@ref).
 """
 concatenate(dims, args...) = Base.materialize(concatenated(dims, args...))
 
@@ -145,7 +149,7 @@ concatenate(dims, args...) = Base.materialize(concatenated(dims, args...))
 
 Concatenate the supplied `args` along dimensions `dims`.
 
-See also [`concatenate`] and [`cat!`](@ref).
+See also [`concatenate`](@ref) and [`cat!`](@ref).
 """
 cat(args...; dims) = concatenate(dims, args...)
 Base.materialize(concat::Concatenated) = copy(concat)
