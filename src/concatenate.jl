@@ -89,8 +89,8 @@ end
 
 function Base.similar(concat::Concatenated, ::Type{T}, ax) where {T}
     # Convert to a broadcasted to leverage its similar implementation.
-    bc = BC.Broadcasted(style(concat), nothing, ())
-    return similar(bc, T, ax)
+    bc = BC.Broadcasted(style(concat), identity, concat.args, ax)
+    return similar(bc, T)
 end
 
 function cat_axis(
@@ -98,7 +98,10 @@ function cat_axis(
     )
     return cat_axis(cat_axis(a1, a2), a_rest...)
 end
-cat_axis(a1::AbstractUnitRange, a2::AbstractUnitRange) = Base.OneTo(length(a1) + length(a2))
+function cat_axis(a1::AbstractUnitRange, a2::AbstractUnitRange)
+    first(a1) == first(a2) == 1 || throw(ArgumentError("Concatenated axes must start at 1"))
+    return Base.OneTo(length(a1) + length(a2))
+end
 
 function cat_ndims(dims, as::AbstractArray...)
     return max(maximum(dims), maximum(ndims, as))
