@@ -1,156 +1,156 @@
 ### This is based on the BroadcastStyle code in
 ### https://github.com/JuliaLang/julia/blob/master/base/broadcast.jl
-### Objects with customized behavior for a certain function should declare a Style
+### Objects with customized behavior for a certain function should declare a ImplementationStyle
 
 """
-`Style` is an abstract type and trait-function used to determine behavior of
-objects. `Style(typeof(x))` returns the style associated
+`ImplementationStyle` is an abstract type and trait-function used to determine behavior of
+objects. `ImplementationStyle(typeof(x))` returns the style associated
 with `x`. To customize the behavior of a type, one can declare a style
 by defining a type/method pair
 
-    struct MyContainerStyle <: Style end
-    FunctionImplementations.Style(::Type{<:MyContainer}) = MyContainerStyle()
+    struct MyContainerImplementationStyle <: ImplementationStyle end
+    FunctionImplementations.ImplementationStyle(::Type{<:MyContainer}) = MyContainerImplementationStyle()
     
 """
-abstract type Style end
-Style(::Type{T}) where {T} = throw(MethodError(Style, (T,)))
+abstract type ImplementationStyle end
+ImplementationStyle(::Type{T}) where {T} = throw(MethodError(ImplementationStyle, (T,)))
 
-struct UnknownStyle <: Style end
-Style(::Type{Union{}}, slurp...) = UnknownStyle()  # ambiguity resolution
+struct UnknownImplementationStyle <: ImplementationStyle end
+ImplementationStyle(::Type{Union{}}, slurp...) = UnknownImplementationStyle()  # ambiguity resolution
 
 """
-    (s::Style)(f)
+    (s::ImplementationStyle)(f)
 
-Calling a Style `s` with a function `f` as `s(f)` is a shorthand for creating a
+Calling a ImplementationStyle `s` with a function `f` as `s(f)` is a shorthand for creating a
 [`FunctionImplementations.Implementation`](@ref) object wrapping the function `f` with
-Style `s`.
+ImplementationStyle `s`.
 """
-(s::Style)(f) = Implementation(f, s)
+(s::ImplementationStyle)(f) = Implementation(f, s)
 
 """
-`FunctionImplementations.AbstractArrayStyle <: Style` is the abstract supertype for any style
+`FunctionImplementations.AbstractArrayImplementationStyle <: ImplementationStyle` is the abstract supertype for any style
 associated with an `AbstractArray` type.
 
-Note that if two or more `AbstractArrayStyle` subtypes conflict, the resulting
+Note that if two or more `AbstractArrayImplementationStyle` subtypes conflict, the resulting
 style will fall back to that of `Array`s. If this is undesirable, you may need to
-define binary [`Style`](@ref) rules to control the output type.
+define binary [`ImplementationStyle`](@ref) rules to control the output type.
 
-See also [`FunctionImplementations.DefaultArrayStyle`](@ref).
+See also [`FunctionImplementations.DefaultArrayImplementationStyle`](@ref).
 """
-abstract type AbstractArrayStyle <: Style end
+abstract type AbstractArrayImplementationStyle <: ImplementationStyle end
 
 """
-`FunctionImplementations.DefaultArrayStyle()` is a [`FunctionImplementations.Style`](@ref)
-indicating that an object behaves as an array. Specifically, `DefaultArrayStyle` is
+`FunctionImplementations.DefaultArrayImplementationStyle()` is a [`FunctionImplementations.ImplementationStyle`](@ref)
+indicating that an object behaves as an array. Specifically, `DefaultArrayImplementationStyle` is
 used for any `AbstractArray` type that hasn't defined a specialized style, and in the
 absence of overrides from other arguments the resulting output type is `Array`.
 """
-struct DefaultArrayStyle <: AbstractArrayStyle end
-Style(::Type{<:AbstractArray}) = DefaultArrayStyle()
+struct DefaultArrayImplementationStyle <: AbstractArrayImplementationStyle end
+ImplementationStyle(::Type{<:AbstractArray}) = DefaultArrayImplementationStyle()
 
-# `ArrayConflict` is an internal type signaling that two or more different `AbstractArrayStyle`
+# `ArrayImplementationConflict` is an internal type signaling that two or more different `AbstractArrayImplementationStyle`
 # objects were supplied as arguments, and that no rule was defined for resolving the
 # conflict. The resulting output is `Array`. While this is the same output type
-# produced by `DefaultArrayStyle`, `ArrayConflict` "poisons" the Style so that
-# 3 or more arguments still return an `ArrayConflict`.
-struct ArrayConflict <: AbstractArrayStyle end
+# produced by `DefaultArrayImplementationStyle`, `ArrayImplementationConflict` "poisons" the ImplementationStyle so that
+# 3 or more arguments still return an `ArrayImplementationConflict`.
+struct ArrayImplementationConflict <: AbstractArrayImplementationStyle end
 
-### Binary Style rules
+### Binary ImplementationStyle rules
 """
-    Style(::Style1, ::Style2) = Style3()
+    ImplementationStyle(::ImplementationStyle1, ::ImplementationStyle2) = ImplementationStyle3()
 
-Indicate how to resolve different `Style`s. For example,
+Indicate how to resolve different `ImplementationStyle`s. For example,
 
-    Style(::Primary, ::Secondary) = Primary()
+    ImplementationStyle(::Primary, ::Secondary) = Primary()
 
 would indicate that style `Primary` has precedence over `Secondary`.
 You do not have to (and generally should not) define both argument orders.
 The result does not have to be one of the input arguments, it could be a third type.
 """
-Style(::S, ::S) where {S <: Style} = S() # homogeneous types preserved
-# Fall back to UnknownStyle. This is necessary to implement argument-swapping
-Style(::Style, ::Style) = UnknownStyle()
-# UnknownStyle loses to everything
-Style(::UnknownStyle, ::UnknownStyle) = UnknownStyle()
-Style(::S, ::UnknownStyle) where {S <: Style} = S()
+ImplementationStyle(::S, ::S) where {S <: ImplementationStyle} = S() # homogeneous types preserved
+# Fall back to UnknownImplementationStyle. This is necessary to implement argument-swapping
+ImplementationStyle(::ImplementationStyle, ::ImplementationStyle) = UnknownImplementationStyle()
+# UnknownImplementationStyle loses to everything
+ImplementationStyle(::UnknownImplementationStyle, ::UnknownImplementationStyle) = UnknownImplementationStyle()
+ImplementationStyle(::S, ::UnknownImplementationStyle) where {S <: ImplementationStyle} = S()
 # Precedence rules
-Style(::A, ::A) where {A <: AbstractArrayStyle} = A()
-function Style(a::A, b::B) where {A <: AbstractArrayStyle, B <: AbstractArrayStyle}
+ImplementationStyle(::A, ::A) where {A <: AbstractArrayImplementationStyle} = A()
+function ImplementationStyle(a::A, b::B) where {A <: AbstractArrayImplementationStyle, B <: AbstractArrayImplementationStyle}
     if Base.typename(A) ≡ Base.typename(B)
         return A()
     end
-    return UnknownStyle()
+    return UnknownImplementationStyle()
 end
-# Any specific array type beats DefaultArrayStyle
-Style(a::AbstractArrayStyle, ::DefaultArrayStyle) = a
+# Any specific array type beats DefaultArrayImplementationStyle
+ImplementationStyle(a::AbstractArrayImplementationStyle, ::DefaultArrayImplementationStyle) = a
 
-## logic for deciding the Style
+## logic for deciding the ImplementationStyle
 
 """
-    style(cs...)::Style
+    style(cs...)::ImplementationStyle
 
-Decides which `Style` to use for any number of value arguments.
-Uses [`Style`](@ref) to get the style for each argument, and uses
+Decides which `ImplementationStyle` to use for any number of value arguments.
+Uses [`ImplementationStyle`](@ref) to get the style for each argument, and uses
 [`result_style`](@ref) to combine styles.
 
 # Examples
 ```jldoctest
 julia> FunctionImplementations.style([1], [1 2; 3 4])
-FunctionImplementations.DefaultArrayStyle()
+FunctionImplementations.DefaultArrayImplementationStyle()
 ```
 """
 function style end
 
-style() = DefaultArrayStyle()
-style(c) = result_style(Style(typeof(c)))
+style() = DefaultArrayImplementationStyle()
+style(c) = result_style(ImplementationStyle(typeof(c)))
 style(c1, c2) = result_style(style(c1), style(c2))
 @inline style(c1, c2, cs...) = result_style(style(c1), style(c2, cs...))
 
 """
-    result_style(s1::Style[, s2::Style])::Style
+    result_style(s1::ImplementationStyle[, s2::ImplementationStyle])::ImplementationStyle
 
-Takes one or two `Style`s and combines them using [`Style`](@ref) to
-determine a common `Style`.
+Takes one or two `ImplementationStyle`s and combines them using [`ImplementationStyle`](@ref) to
+determine a common `ImplementationStyle`.
 
 # Examples
 
 ```jldoctest
-julia> FunctionImplementations.result_style(FunctionImplementations.DefaultArrayStyle(), FunctionImplementations.DefaultArrayStyle())
-FunctionImplementations.DefaultArrayStyle()
+julia> FunctionImplementations.result_style(FunctionImplementations.DefaultArrayImplementationStyle(), FunctionImplementations.DefaultArrayImplementationStyle())
+FunctionImplementations.DefaultArrayImplementationStyle()
 
-julia> FunctionImplementations.result_style(FunctionImplementations.UnknownStyle(), FunctionImplementations.DefaultArrayStyle())
-FunctionImplementations.DefaultArrayStyle()
+julia> FunctionImplementations.result_style(FunctionImplementations.UnknownImplementationStyle(), FunctionImplementations.DefaultArrayImplementationStyle())
+FunctionImplementations.DefaultArrayImplementationStyle()
 ```
 """
 function result_style end
 
-result_style(s::Style) = s
-function result_style(s1::S, s2::S) where {S <: Style}
+result_style(s::ImplementationStyle) = s
+function result_style(s1::S, s2::S) where {S <: ImplementationStyle}
     return s1 ≡ s2 ? s1 : error("inconsistent styles, custom rule needed")
 end
 # Test both orders so users typically only have to declare one order
-result_style(s1, s2) = result_join(s1, s2, Style(s1, s2), Style(s2, s1))
+result_style(s1, s2) = result_join(s1, s2, ImplementationStyle(s1, s2), ImplementationStyle(s2, s1))
 
-# result_join is the final arbiter. Because `Style` for undeclared pairs results in UnknownStyle,
-# we defer to any case where the result of `Style` is known.
-result_join(::Any, ::Any, ::UnknownStyle, ::UnknownStyle) = UnknownStyle()
-result_join(::Any, ::Any, ::UnknownStyle, s::Style) = s
-result_join(::Any, ::Any, s::Style, ::UnknownStyle) = s
+# result_join is the final arbiter. Because `ImplementationStyle` for undeclared pairs results in UnknownImplementationStyle,
+# we defer to any case where the result of `ImplementationStyle` is known.
+result_join(::Any, ::Any, ::UnknownImplementationStyle, ::UnknownImplementationStyle) = UnknownImplementationStyle()
+result_join(::Any, ::Any, ::UnknownImplementationStyle, s::ImplementationStyle) = s
+result_join(::Any, ::Any, s::ImplementationStyle, ::UnknownImplementationStyle) = s
 # For AbstractArray types with undefined precedence rules,
-# we have to signal conflict. Because ArrayConflict is a subtype of AbstractArray,
-# this will "poison" any future operations (if we instead returned `DefaultArrayStyle`, then for
+# we have to signal conflict. Because ArrayImplementationConflict is a subtype of AbstractArray,
+# this will "poison" any future operations (if we instead returned `DefaultArrayImplementationStyle`, then for
 # 3-array functions returned type would depend on argument order).
-result_join(::AbstractArrayStyle, ::AbstractArrayStyle, ::UnknownStyle, ::UnknownStyle) =
-    ArrayConflict()
+result_join(::AbstractArrayImplementationStyle, ::AbstractArrayImplementationStyle, ::UnknownImplementationStyle, ::UnknownImplementationStyle) =
+    ArrayImplementationConflict()
 # Fallbacks in case users define `rule` for both argument-orders (not recommended)
-result_join(::Any, ::Any, s1::S, s2::S) where {S <: Style} = result_style(s1, s2)
+result_join(::Any, ::Any, s1::S, s2::S) where {S <: ImplementationStyle} = result_style(s1, s2)
 
 @noinline function result_join(::S, ::T, ::U, ::V) where {S, T, U, V}
     error(
         """
         conflicting rules defined
-          FunctionImplementations.Style(::$S, ::$T) = $U()
-          FunctionImplementations.Style(::$T, ::$S) = $V()
-        One of these should be undefined (and thus return FunctionImplementations.UnknownStyle)."""
+          FunctionImplementations.ImplementationStyle(::$S, ::$T) = $U()
+          FunctionImplementations.ImplementationStyle(::$T, ::$S) = $V()
+        One of these should be undefined (and thus return FunctionImplementations.UnknownImplementationStyle)."""
     )
 end
