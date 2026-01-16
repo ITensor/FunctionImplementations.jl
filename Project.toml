@@ -1,7 +1,7 @@
 name = "FunctionImplementations"
 uuid = "7c7cc465-9c6a-495f-bdd1-f42428e86d0c"
 authors = ["ITensor developers <support@itensor.org> and contributors"]
-version = "0.3.2"
+version = "0.4.0"
 
 [weakdeps]
 BlockArrays = "8e7c35d0-a365-5155-bbbb-fb81a777f24e"
