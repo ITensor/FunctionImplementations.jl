@@ -11,13 +11,13 @@ reminiscent of how Broadcast works.
 
 The various entry points for specializing behavior are:
 
-* Destination selection can be achieved through:
+  - Destination selection can be achieved through:
 
 ```julia
 Base.similar(concat::Concatenated{Style}, ::Type{T}, axes) where {Style}
 ```
 
-* Custom implementations:
+  - Custom implementations:
 
 ```julia
 Base.copy(concat::Concatenated{Style}) # custom implementation of cat
@@ -28,11 +28,12 @@ Base.copyto!(dest, concat::Concatenated{Nothing}) # custom implementation of cat
 module Concatenate
 
 export concatenate
-VERSION >= v"1.11.0-DEV.469" && eval(Meta.parse("public Concatenated, cat, cat!, concatenated"))
+VERSION >= v"1.11.0-DEV.469" &&
+    eval(Meta.parse("public Concatenated, cat, cat!, concatenated"))
 
-using Base: promote_eltypeof
 import Base.Broadcast as BC
 using ..FunctionImplementations: zero!
+using Base: promote_eltypeof
 
 unval(::Val{x}) where {x} = x
 
@@ -116,7 +117,11 @@ end
 
 function cat_axes(dims, a::AbstractArray, as::AbstractArray...)
     return ntuple(cat_ndims(dims, a, as...)) do dim
-        return dim in dims ? cat_axis(map(Base.Fix2(axes, dim), (a, as...))...) : axes(a, dim)
+        return if dim in dims
+            cat_axis(map(Base.Fix2(axes, dim), (a, as...))...)
+        else
+            axes(a, dim)
+        end
     end
 end
 function cat_axes(dims::Val, as::AbstractArray...)
@@ -191,11 +196,19 @@ end
 __cat_offset!(A, shape, catdims, offsets) = A
 function __cat_offset1!(A, shape, catdims, offsets, x)
     inds = ntuple(length(offsets)) do i
-        (i <= length(catdims) && catdims[i]) ? offsets[i] .+ cat_indices(x, i) : 1:shape[i]
+        return if (i <= length(catdims) && catdims[i])
+            offsets[i] .+ cat_indices(x, i)
+        else
+            1:shape[i]
+        end
     end
     _copy_or_fill!(A, inds, x)
     newoffsets = ntuple(length(offsets)) do i
-        (i <= length(catdims) && catdims[i]) ? offsets[i] + cat_size(x, i) : offsets[i]
+        return if (i <= length(catdims) && catdims[i])
+            offsets[i] + cat_size(x, i)
+        else
+            offsets[i]
+        end
     end
     return newoffsets
 end

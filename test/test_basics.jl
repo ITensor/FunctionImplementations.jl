@@ -20,10 +20,13 @@ using Test: @test, @testset
     end
     @testset "ImplementationStyle" begin
         # Test basic ImplementationStyle trait for different array types
-        @test FI.ImplementationStyle(typeof([1, 2, 3])) ≡ FI.DefaultArrayImplementationStyle()
+        @test FI.ImplementationStyle(typeof([1, 2, 3])) ≡
+            FI.DefaultArrayImplementationStyle()
         @test FI.style([1, 2, 3]) ≡ FI.DefaultArrayImplementationStyle()
-        @test FI.ImplementationStyle(typeof([1 2; 3 4])) ≡ FI.DefaultArrayImplementationStyle()
-        @test FI.ImplementationStyle(typeof(rand(2, 3, 4))) ≡ FI.DefaultArrayImplementationStyle()
+        @test FI.ImplementationStyle(typeof([1 2; 3 4])) ≡
+            FI.DefaultArrayImplementationStyle()
+        @test FI.ImplementationStyle(typeof(rand(2, 3, 4))) ≡
+            FI.DefaultArrayImplementationStyle()
 
         # Test custom ImplementationStyle definition
         struct CustomImplementationStyle <: FI.ImplementationStyle end
@@ -75,7 +78,8 @@ using Test: @test, @testset
         @test result ≡ FI.DefaultArrayImplementationStyle()
 
         # Test result_style with single argument
-        @test FI.result_style(FI.DefaultArrayImplementationStyle()) isa FI.DefaultArrayImplementationStyle
+        @test FI.result_style(FI.DefaultArrayImplementationStyle()) isa
+            FI.DefaultArrayImplementationStyle
 
         # Test result_style with two identical styles
         s = FI.DefaultArrayImplementationStyle()
