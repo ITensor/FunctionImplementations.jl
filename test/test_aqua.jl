@@ -1,5 +1,5 @@
-using FunctionImplementations: FunctionImplementations
 using Aqua: Aqua
+using FunctionImplementations: FunctionImplementations
 using Test: @testset
 
 @testset "Code quality (Aqua.jl)" begin
