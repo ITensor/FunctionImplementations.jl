@@ -1,6 +1,6 @@
 name = "FunctionImplementations"
 uuid = "7c7cc465-9c6a-495f-bdd1-f42428e86d0c"
-version = "0.4.1"
+version = "0.4.2"
 authors = ["ITensor developers <support@itensor.org> and contributors"]
 
 [workspace]

@@ -1,7 +1,7 @@
 module FunctionImplementationsFillArraysExt
 
-using FillArrays: FillArrays as FA, AbstractFill, RectDiagonal
 import FunctionImplementations as FI
+using FillArrays: FillArrays as FA, AbstractFill, RectDiagonal
 
 function check_perm(a::AbstractArray, perm)
     (ndims(a) == length(perm) && isperm(perm)) ||
