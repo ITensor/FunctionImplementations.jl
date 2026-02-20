@@ -10,7 +10,6 @@ by defining a type/method pair
 
     struct MyContainerImplementationStyle <: ImplementationStyle end
     FunctionImplementations.ImplementationStyle(::Type{<:MyContainer}) = MyContainerImplementationStyle()
-    
 """
 abstract type ImplementationStyle end
 ImplementationStyle(::Type{T}) where {T} = throw(MethodError(ImplementationStyle, (T,)))
@@ -69,20 +68,37 @@ The result does not have to be one of the input arguments, it could be a third t
 """
 ImplementationStyle(::S, ::S) where {S <: ImplementationStyle} = S() # homogeneous types preserved
 # Fall back to UnknownImplementationStyle. This is necessary to implement argument-swapping
-ImplementationStyle(::ImplementationStyle, ::ImplementationStyle) = UnknownImplementationStyle()
+function ImplementationStyle(::ImplementationStyle, ::ImplementationStyle)
+    return UnknownImplementationStyle()
+end
 # UnknownImplementationStyle loses to everything
-ImplementationStyle(::UnknownImplementationStyle, ::UnknownImplementationStyle) = UnknownImplementationStyle()
-ImplementationStyle(::S, ::UnknownImplementationStyle) where {S <: ImplementationStyle} = S()
+function ImplementationStyle(::UnknownImplementationStyle, ::UnknownImplementationStyle)
+    return UnknownImplementationStyle()
+end
+function ImplementationStyle(
+        ::S,
+        ::UnknownImplementationStyle
+    ) where {S <: ImplementationStyle}
+    return S()
+end
 # Precedence rules
 ImplementationStyle(::A, ::A) where {A <: AbstractArrayImplementationStyle} = A()
-function ImplementationStyle(a::A, b::B) where {A <: AbstractArrayImplementationStyle, B <: AbstractArrayImplementationStyle}
+function ImplementationStyle(
+        a::A,
+        b::B
+    ) where {A <: AbstractArrayImplementationStyle, B <: AbstractArrayImplementationStyle}
     if Base.typename(A) ≡ Base.typename(B)
         return A()
     end
     return UnknownImplementationStyle()
 end
 # Any specific array type beats DefaultArrayImplementationStyle
-ImplementationStyle(a::AbstractArrayImplementationStyle, ::DefaultArrayImplementationStyle) = a
+function ImplementationStyle(
+        a::AbstractArrayImplementationStyle,
+        ::DefaultArrayImplementationStyle
+    )
+    return a
+end
 
 ## logic for deciding the ImplementationStyle
 
@@ -94,6 +110,7 @@ Uses [`ImplementationStyle`](@ref) to get the style for each argument, and uses
 [`result_style`](@ref) to combine styles.
 
 # Examples
+
 ```jldoctest
 julia> FunctionImplementations.style([1], [1 2; 3 4])
 FunctionImplementations.DefaultArrayImplementationStyle()
@@ -115,10 +132,16 @@ determine a common `ImplementationStyle`.
 # Examples
 
 ```jldoctest
-julia> FunctionImplementations.result_style(FunctionImplementations.DefaultArrayImplementationStyle(), FunctionImplementations.DefaultArrayImplementationStyle())
+julia> FunctionImplementations.result_style(
+           FunctionImplementations.DefaultArrayImplementationStyle(),
+           FunctionImplementations.DefaultArrayImplementationStyle()
+       )
 FunctionImplementations.DefaultArrayImplementationStyle()
 
-julia> FunctionImplementations.result_style(FunctionImplementations.UnknownImplementationStyle(), FunctionImplementations.DefaultArrayImplementationStyle())
+julia> FunctionImplementations.result_style(
+           FunctionImplementations.UnknownImplementationStyle(),
+           FunctionImplementations.DefaultArrayImplementationStyle()
+       )
 FunctionImplementations.DefaultArrayImplementationStyle()
 ```
 """
@@ -129,24 +152,41 @@ function result_style(s1::S, s2::S) where {S <: ImplementationStyle}
     return s1 ≡ s2 ? s1 : error("inconsistent styles, custom rule needed")
 end
 # Test both orders so users typically only have to declare one order
-result_style(s1, s2) = result_join(s1, s2, ImplementationStyle(s1, s2), ImplementationStyle(s2, s1))
+function result_style(s1, s2)
+    return result_join(s1, s2, ImplementationStyle(s1, s2), ImplementationStyle(s2, s1))
+end
 
 # result_join is the final arbiter. Because `ImplementationStyle` for undeclared pairs results in UnknownImplementationStyle,
 # we defer to any case where the result of `ImplementationStyle` is known.
-result_join(::Any, ::Any, ::UnknownImplementationStyle, ::UnknownImplementationStyle) = UnknownImplementationStyle()
+function result_join(
+        ::Any,
+        ::Any,
+        ::UnknownImplementationStyle,
+        ::UnknownImplementationStyle
+    )
+    return UnknownImplementationStyle()
+end
 result_join(::Any, ::Any, ::UnknownImplementationStyle, s::ImplementationStyle) = s
 result_join(::Any, ::Any, s::ImplementationStyle, ::UnknownImplementationStyle) = s
 # For AbstractArray types with undefined precedence rules,
 # we have to signal conflict. Because ArrayImplementationConflict is a subtype of AbstractArray,
 # this will "poison" any future operations (if we instead returned `DefaultArrayImplementationStyle`, then for
 # 3-array functions returned type would depend on argument order).
-result_join(::AbstractArrayImplementationStyle, ::AbstractArrayImplementationStyle, ::UnknownImplementationStyle, ::UnknownImplementationStyle) =
-    ArrayImplementationConflict()
+function result_join(
+        ::AbstractArrayImplementationStyle,
+        ::AbstractArrayImplementationStyle,
+        ::UnknownImplementationStyle,
+        ::UnknownImplementationStyle
+    )
+    return ArrayImplementationConflict()
+end
 # Fallbacks in case users define `rule` for both argument-orders (not recommended)
-result_join(::Any, ::Any, s1::S, s2::S) where {S <: ImplementationStyle} = result_style(s1, s2)
+function result_join(::Any, ::Any, s1::S, s2::S) where {S <: ImplementationStyle}
+    return result_style(s1, s2)
+end
 
 @noinline function result_join(::S, ::T, ::U, ::V) where {S, T, U, V}
-    error(
+    return error(
         """
         conflicting rules defined
           FunctionImplementations.ImplementationStyle(::$S, ::$T) = $U()

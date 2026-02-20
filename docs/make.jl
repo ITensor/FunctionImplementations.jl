@@ -1,8 +1,9 @@
-using FunctionImplementations: FunctionImplementations
 using Documenter: Documenter, DocMeta, deploydocs, makedocs
+using FunctionImplementations: FunctionImplementations
 
 DocMeta.setdocmeta!(
-    FunctionImplementations, :DocTestSetup, :(using FunctionImplementations); recursive = true
+    FunctionImplementations, :DocTestSetup, :(using FunctionImplementations);
+    recursive = true
 )
 
 include("make_index.jl")
@@ -14,11 +15,12 @@ makedocs(;
     format = Documenter.HTML(;
         canonical = "https://itensor.github.io/FunctionImplementations.jl",
         edit_link = "main",
-        assets = ["assets/favicon.ico", "assets/extras.css"],
+        assets = ["assets/favicon.ico", "assets/extras.css"]
     ),
-    pages = ["Home" => "index.md", "Reference" => "reference.md"],
+    pages = ["Home" => "index.md", "Reference" => "reference.md"]
 )
 
 deploydocs(;
-    repo = "github.com/ITensor/FunctionImplementations.jl", devbranch = "main", push_preview = true
+    repo = "github.com/ITensor/FunctionImplementations.jl", devbranch = "main",
+    push_preview = true
 )
