@@ -1,12 +1,13 @@
 using Documenter: Documenter, DocMeta, deploydocs, makedocs
 using FunctionImplementations: FunctionImplementations
+using ITensorFormatter: ITensorFormatter
 
 DocMeta.setdocmeta!(
     FunctionImplementations, :DocTestSetup, :(using FunctionImplementations);
     recursive = true
 )
 
-include("make_index.jl")
+ITensorFormatter.make_index!(pkgdir(FunctionImplementations))
 
 makedocs(;
     modules = [FunctionImplementations],
