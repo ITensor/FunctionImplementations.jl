@@ -1,6 +1,6 @@
 name = "FunctionImplementations"
 uuid = "7c7cc465-9c6a-495f-bdd1-f42428e86d0c"
-version = "0.4.14"
+version = "0.4.15"
 authors = ["ITensor developers <support@itensor.org> and contributors"]
 
 [workspace]
@@ -22,5 +22,5 @@ FunctionImplementationsStridedViewsExt = "StridedViews"
 BlockArrays = "1.4"
 FillArrays = "1.15"
 LinearAlgebra = "1.10"
-StridedViews = "0.4.1"
+StridedViews = "0.4.1, 0.5"
 julia = "1.10"
